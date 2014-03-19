@@ -82,10 +82,9 @@
         init: function(id) {
             this.fillNodes(id === undefined ? 0 : id, this);
         },
-
         getNode: function(id) {
             return this.$tree.find('.node' + id);
-        },
+        },         
         getNodeLastChild: function(parentId) {
             var last = undefined;
             $.each(this.getNode(parentId).nextAll('.node'), function(key, node) {
@@ -99,20 +98,13 @@
             return last;
 
         },
-        getSelected: function() {
+        getSelectedNodes: function() {
             return this.$tree.find('.node-selected');
-        },
-        getSelectedId: function() {
-            var node = this.getSelected();
-            return node.data('id');
-        },
-        getSelectedPath: function() {
-            var node = this.getSelected();
-            if (!node)
-                return node;
-
+        },        
+        getNodePath: function(node) {
             var path = [node.find('.node-name').html()]
-                    , parent = node.data('parent');
+                , parent = node.data('parent');
+                
             node.prevAll('.node').each(function() {
                 var $this = $(this);                
                 if ($this.data('id')===parent) {
@@ -120,9 +112,8 @@
                     path[path.length] = $this.find('.node-name').html();
                 }
             });
-            return path;
-
-        },
+            return path;            
+        },  
         renderNode: function(data) {
             var self = this;
             var node = self.$nodeTemplate.clone(false);
@@ -147,12 +138,34 @@
             });
 
             node.find('.node-name').click(function() {
-                self.$tree.find('.node-selected').removeClass('node-selected');
                 var node = $(this).parents('.node');
-                node.addClass('node-selected');
+                var nodeData = {
+                    id: node.data('id'),
+                    path: self.getNodePath(node)
+                };
+                if(node.hasClass('node-selected')) {
+                    if ($.isFunction(self.options.onUnselect)) {
+                        self.options.onUnselect(node, nodeData, self);
+                    }
+                    node.removeClass('node-selected');
+                } else {
+                    var selectedNodes = self.getSelectedNodes();
+                    if (self.options.multiselect===false) {
+                        selectedNodes.removeClass('node-selected');
+                    } else {
+                        if (!isNaN(self.options.multiselect) && self.options.multiselect === self.getSelectedNodes().length) {
+                            if ($.isFunction(self.options.onSelectOverflow)) {
+                                self.options.onSelectOverflow(node, nodeData, self);
+                            }                            
+                            return;
+                        }
+                    }
+                    
+                    node.addClass('node-selected');
 
-                if ($.isFunction(self.options.onSelect)) {
-                    self.options.onSelect(node, self);
+                    if ($.isFunction(self.options.onSelect)) {
+                        self.options.onSelect(node, nodeData, self);
+                    }                    
                 }
             });
 
@@ -334,17 +347,27 @@
     };
 
     $.fn.gtreetable = function(option) {
+        if(typeof option === "string" && option==="selectedId") {
+            var ids = [],
+                obj = $(this).data('gtreetable');
+        
+            $.each(obj.getSelectedNodes(),function(key, node) {
+                ids.push($(node).data('id'));
+            });
+            return (obj.options.multiselect===false) ? ids[0] : ids;
+        }        
+
         return this.each(function() {
             var $this = $(this)
-                    , obj = $this.data('gtreetable');
-
+                , obj = $this.data('gtreetable');
+                    
             if (!obj) {
                 if ($this[0].tagName === 'TABLE') {
                     var obj = new GTreeTable($(this), option);
                     $this.data('gtreetable', obj);
                     obj.init();
                 }
-            }
+            }                
         });
     };
 
