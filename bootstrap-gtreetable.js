@@ -1,5 +1,5 @@
 /* =========================================================
- * bootstrap-gtreetable.js 1.2a
+ * bootstrap-gtreetable.js 1.3a
  * http://gtreetable.gilek.net
  * =========================================================
  * Copyright 2014 Maciej "Gilek" Kłak
@@ -23,7 +23,7 @@
         this.options = $.extend({},$.fn.gtreetable.defaults, options);
         
         var lang = this.options.languages[this.options.language] === undefined ?
-                this.options.languages['en'] :
+                this.options.languages['en_US'] :
                 this.options.languages[this.options.language];
 
         if (this.options.template === undefined) {
@@ -350,9 +350,9 @@
 
     $.fn.gtreetable.defaults = {
         nodeIndent: 16,
-        language: 'en',
+        language: 'en_US',
         languages: {
-            en: {
+            en_US: {
                 save: 'Save',
                 cancel: 'Cancel',
                 action: 'Action',
