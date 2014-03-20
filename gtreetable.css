@@ -8,6 +8,14 @@
     -moz-transform:rotate(90deg); 
     -o-transform:rotate(90deg); 
 }
+.gtreetable .node-handle { 
+    padding-right: 12px; 
+    cursor: move;
+    background: transparent url(img/drag.png) repeat-y;
+    visibility: hidden;
+}
+.gtreetable .node-draggable.node-hovered .node-handle { visibility: visible; }
+
 .gtreetable .node-hovered .node-icon { opacity: 0.6; }
 .gtreetable .node-actions { visibility: hidden; }
 .gtreetable.gtreetable-fullAccess .node-hovered.node-saved .node-actions, .gtreetable.gtreetable-fullAccess .node-selected.node-saved .node-actions { visibility: visible; }

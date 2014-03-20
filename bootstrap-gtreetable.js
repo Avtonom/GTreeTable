@@ -27,11 +27,17 @@
                 this.options.languages[this.options.language];
 
         if (this.options.template === undefined) {
-        
             var template = '<table class="table gtreetable">' +
             '<tr class="node node-collapsed">' +
                 '<td>' +
-                    '<span><span class="node-indent"></span><i class="node-icon glyphicon glyphicon-chevron-right"></i><i class="node-icon-selected glyphicon glyphicon-ok"></i><span class="node-name"></span></span>' +
+                    '<span>';
+                    
+            if (this.options.draggable===true) {
+                template += '<span class="node-handle">&zwnj;</span>';
+            }        
+                    
+            template += '<span class="node-indent">&zwnj;</span><i class="node-icon glyphicon glyphicon-chevron-right"></i><i class="node-icon-selected glyphicon glyphicon-ok"></i><span class="node-name">'+
+                    '</span>' +
                     '<span class="hide node-action">' +
                         '<input type="text" name="name" value="" style="width: '+ this.options.inputWidth +'" class="form-control" />' +
                         '<button type="button" class="btn btn-sm btn-primary node-save">' + lang.save + '</button> ' +
@@ -67,15 +73,15 @@
         
         this.cache = new Array();
 
-        this.$tree = element;
-        if (!this.$tree.find('tbody').length === 0)
-            this.$tree.append('<tbody></tbody>');
+        this.tree = element;
+        if (!this.tree.find('tbody').length === 0)
+            this.tree.append('<tbody></tbody>');
 
         if (!this.options.readonly) {
-            this.$tree.addClass('gtreetable-fullAccess');
+            this.tree.addClass('gtreetable-fullAccess');
         }
 
-        this.$nodeTemplate = $(this.options.templateSelector ? this.options.templateSelector : this.options.template).find('.node');
+        this.nodeTemplate = $(this.options.templateSelector ? this.options.templateSelector : this.options.template).find('.node');
     };
 
     GTreeTable.prototype = {
@@ -83,7 +89,7 @@
             this.fillNodes(id === undefined ? 0 : id, this);
         },
         getNode: function(id) {
-            return this.$tree.find('.node' + id);
+            return this.tree.find('.node' + id);
         },         
         getNodeLastChild: function(parentId) {
             var last = undefined;
@@ -99,7 +105,7 @@
 
         },
         getSelectedNodes: function() {
-            return this.$tree.find('.node-selected');
+            return this.tree.find('.node-selected');
         },        
         getNodePath: function(node) {
             var path = [node.find('.node-name').html()]
@@ -116,17 +122,19 @@
         },  
         renderNode: function(data) {
             var self = this;
-            var node = self.$nodeTemplate.clone(false);
+            var node = self.nodeTemplate.clone(false);
             node.find('.node-name').html(data.name);
             if (data.id !== undefined) {
                 node.data('id', data.id);
                 node.addClass('node' + data.id);
                 node.addClass('node-saved');
+                if (parseInt(data.level)>=1)
+                    node.addClass('node-draggable');
             }
             node.data('parent', data.parent);
             node.data('level', data.level);
 
-            node.find('.node-indent').css('marginLeft', (parseInt(data.level) * self.options.nodeIndent) + 'px').html('&zwnj;');
+            node.find('.node-indent').css('marginLeft', (parseInt(data.level) * self.options.nodeIndent) + 'px');
 
             node.mouseover(function() {
                 $(this).addClass('node-hovered');
@@ -195,8 +203,8 @@
             return node;
         },
         appendNode: function(node) {
-            if (this.$tree.find('.node').length === 0)
-                this.$tree.append(node);
+            if (this.tree.find('.node').length === 0)
+                this.tree.append(node);
             else {
                 var last = this.getNodeLastChild(node.data('parent'));
                 if (last === undefined)
@@ -269,6 +277,7 @@
                         node.data('id', data.id);
                         node.addClass('node' + data.id);
                         node.addClass('node-saved');
+                        node.addClass('node-draggable');
                     }
                 });
         },
@@ -407,6 +416,7 @@
         loadingClass: 'node-loading',
         inputWidth: '60%',
         readonly: false,
-        cache: true
+        cache: true,
+        draggable: false
     };
 }(jQuery);
