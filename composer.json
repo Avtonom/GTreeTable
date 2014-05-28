@@ -1,0 +1,12 @@
+{
+    "name": "gilek/GTreeTable",
+    "require": {
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/Avtonom/GTreeTable.git"
+        }
+    ],
+    "minimum-stability": "dev"
+}
