@@ -48,9 +48,8 @@
             if (this.options.defaultActions!==null) 
                 this.actions = this.options.defaultActions;
         
-            if (this.options.actions!==undefined){
-                this.actions.push(this.options.actions);
-            }
+            if (this.options.actions!==undefined) 
+                this.actions.push.apply(this.actions, this.options.actions);
             
             $.each(this.actions, function(index,action) {
                 var matches = action.name.match(/\{(.+)\}/);
