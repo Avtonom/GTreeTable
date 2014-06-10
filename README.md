@@ -45,9 +45,9 @@ Schema of the transmitted data (JSON) is presented by the following example:
  
 ``` 
 [
-	{"id":"22","name":"Category 1","level":"1", "descr":"text 1"},
-	{"id":"32","name":"Category 2","level":"1", "descr":"not empty"},
-	{"id":"34","name":"Category 4","level":"1", "descr":""}
+	{"id":"22","name":"Category 1","level":"1"},
+	{"id":"32","name":"Category 2","level":"1", "descr":"descr 1"},
+	{"id":"34","name":"Category 4","level":"1", "descr":"descr 2", "count_children":2}
 ]
 ```
 
