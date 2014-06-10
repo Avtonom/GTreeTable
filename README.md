@@ -1,14 +1,18 @@
-GTreeTable
+GTreeTableEx
 ==========
 
-GTreeTable is an extension of [Twitter Bootstrap 3](http://getbootstrap.com), which allows to use tree structure inside HTML table. 
+Данный плагин добавляет возможность с помощью [Twitter Bootstrap 3] красиво оформить древовидную структуру данных (меню, классификатор, список ....) с функциями: создания, удаления, переименования, переноса, выделения элементов.
+
+--------------------------
+
+GTreeTableEx is an extension of [Twitter Bootstrap 3](http://getbootstrap.com), which allows to use tree structure inside HTML table.
 It is possible to indicate tree node position and execute CRUD operation on it.
 
-See [live demo](http://gtreetable.gilek.net).
+See OLD [live demo](http://gtreetable.gilek.net).
 
 You can also see [Yii-GTreeTable](http://www.yiiframework.com/extension/gtreetable/), PHP back-end for Yii Framework.
 
-![](http://gtreetable.gilek.net/assets/gtreetable-demo.png)
+![](https://github.com/Avtonom/GTreeTable/img/demo.png)
 
 Installation
 --------------------------
@@ -41,9 +45,9 @@ Schema of the transmitted data (JSON) is presented by the following example:
  
 ``` 
 [
-	{"id":"22","name":"Category 1","level":"1"},
-	{"id":"32","name":"Category 2","level":"1"},
-	{"id":"34","name":"Category 4","level":"1"}
+	{"id":"22","name":"Category 1","level":"1", "descr":"text 1"},
+	{"id":"32","name":"Category 2","level":"1", "descr":"not empty"},
+	{"id":"34","name":"Category 4","level":"1", "descr":""}
 ]
 ```
 
@@ -54,6 +58,17 @@ Following parameters are responsible for that: `onSave` and `onDelete`. Both nee
 jQuery('#gtreetable').gtreetable({
     'source': function(id) {
         return '/gtreetable/nodeChildren' + '?id=' + id;
+    },
+    'onMove': function(node) {
+        return jQuery.ajax({
+            url: '/gtreetable/update/' + node.data('id'),
+            data: {
+                'param' : 'parent_id',
+                'value' : node.find('.node-move input').val()
+            },
+            dataType: 'json',
+            error: gtreetableError(XMLHttpRequest)
+        });
     },
 	'onSave':function(node) {
 		return jQuery.ajax({
@@ -88,11 +103,11 @@ jQuery('#gtreetable').gtreetable({
 User interface elements are in default shown in English. There is a possibility to change language by attaching appropriate files and defining `language` parameter:
 
 ```html
-<script type="text/javascript" src="languages/bootstrap-gtreetable.pl.js"></script>
+<script type="text/javascript" src="languages/bootstrap-gtreetable.ru.js"></script>
 ```
 ```javascript
 jQuery('#gtreetable').gtreetable({
-	'language': 'pl',
+	'language': 'ru',
     'source': function(id) {
         return '/gtreetable/nodeChildren' + '?id=' + id;
     }
@@ -127,3 +142,4 @@ Configuration
 + `onSave` callback(node) - Function triggering at the node adding / edition moment. It must return `jQuery.ajax` object.
 + `onDelete` callback(node) - Function triggering at the node deleting moment. It must return `jQuery.ajax` object.
 + `onSelect` callback(node, object) - Function triggering at the node selecting moment.
++ `onMove` callback(node) - Function triggering at the node changes to the parent.
