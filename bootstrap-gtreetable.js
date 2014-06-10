@@ -1,9 +1,10 @@
 /* =========================================================
- * bootstrap-gtreetable.js 1.2a
- * http://gtreetable.gilek.net
+ * GTreeTableEx
+ * bootstrap-gtreetable.js 1.3
  * =========================================================
- * Copyright 2014 Maciej "Gilek" Kłak
- * 
+ * Copyright 2014 avtonomspb@mail.ru
+ * Copyright 2014 Maciej "Gilek" Kłak http://gtreetable.gilek.net
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,50 +22,63 @@
     var GTreeTable = function(element, options) {
 
         this.options = $.extend({},$.fn.gtreetable.defaults, options);
-        
+
         var lang = this.options.languages[this.options.language] === undefined ?
-                this.options.languages['en'] :
-                this.options.languages[this.options.language];
+            this.options.languages['en'] :
+            this.options.languages[this.options.language];
 
         if (this.options.template === undefined) {
-        
+
             var template = '<table class="table gtreetable">' +
-            '<tr class="node node-collapsed">' +
+                '<tr class="node node-collapsed">' +
                 '<td>' +
-                    '<span><span class="node-indent"></span><i class="node-icon glyphicon glyphicon-chevron-right"></i><i class="node-icon-selected glyphicon glyphicon-ok"></i><span class="node-name"></span></span>' +
-                    '<span class="hide node-action">' +
-                        '<input type="text" name="name" value="" style="width: '+ this.options.inputWidth +'" class="form-control" />' +
-                        '<button type="button" class="btn btn-sm btn-primary node-save">' + lang.save + '</button> ' +
-                        '<button type="button" class="btn btn-sm node-saveCancel">' + lang.cancel + '</button>' +
-                    '</span>' +
-                    '<div class="btn-group pull-right">' +
-                    '<button type="button" class="btn btn-sm btn-default dropdown-toggle node-actions" data-toggle="dropdown">' +
-                        lang.action + ' <span class="caret"></span>' +
-                    '</button>' +
-                    '<ul class="dropdown-menu" role="menu">' +
-                        '<li role="presentation" class="dropdown-header">' + lang.action + '</li>';
-                
+                '<span><span class="node-indent"></span>' +
+                '<i class="node-icon glyphicon glyphicon-chevron-right"></i><i class="node-icon-selected glyphicon glyphicon-ok"></i>' +
+                '<span class="hide node-action">' +
+                '<input type="text" name="name" value="" style="width: '+ this.options.inputWidth +'" class="form-control" />' +
+                '<button type="button" class="btn btn-sm btn-primary node-save">' + lang.save + '</button> ' +
+                '<button type="button" class="btn btn-sm node-saveCancel">' + lang.cancel + '</button>' +
+                '</span>' +
+                '<span class="node-name"></span> <span class="node-badge badge">?</span><span class="node-descr"></span></span>' +
+//                  '<div class="panel panel-default"><div class="panel-body node-name"></div><div class="panel-footer node-descr"></div></div>' +
+                '<span class="hide row node-move">' +
+                '<span class="col-sm-9">' +
+                '<span class="input-group">' +
+                '<input type="text" class="form-control" placeholder="' + lang.parent_id + '" />' +
+                '<span class="input-group-btn">' +
+                '<button class="btn btn-default node-moveSave" type="button">' + lang.actionMove + '</button>' +
+                '</span>' +
+                ' </span>' +
+                '</span>' +
+                '</span>' +
+                '<div class="btn-group pull-right">' +
+                '<button type="button" class="btn btn-sm btn-default dropdown-toggle node-actions" data-toggle="dropdown">' +
+                lang.action + ' <span class="caret"></span>' +
+                '</button>' +
+                '<ul class="dropdown-menu" role="menu">' +
+                '<li role="presentation" class="dropdown-header">' + lang.action + '</li>';
+
             this.actions = new Array();
-            if (this.options.defaultActions!==null) 
+            if (this.options.defaultActions!==null)
                 this.actions = this.options.defaultActions;
-        
-            if (this.options.actions!==undefined) 
+
+            if (this.options.actions!==undefined)
                 this.actions.push.apply(this.actions, this.options.actions);
-            
+
             $.each(this.actions, function(index,action) {
                 var matches = action.name.match(/\{(.+)\}/);
                 var name = matches!==null && matches[1]!==undefined && lang[matches[1]]!==undefined ? lang[matches[1]] : action.name;
                 template += '<li role="presentation"><a href="#notarget" class="node-action-'+index+'" tabindex="-1">' + name + '</a></li>';
-            }); 
-                     
+            });
+
             template += '</ul>' +
-                    '</div>' +
+                '</div>' +
                 '</td>' +
                 '</tr>' +
-            '</table>';
+                '</table>';
             this.options.template = template;
         }
-        
+
         this.cache = new Array();
 
         this.$tree = element;
@@ -112,9 +126,9 @@
                 return node;
 
             var path = [node.find('.node-name').html()]
-                    , parent = node.data('parent');
+                , parent = node.data('parent');
             node.prevAll('.node').each(function() {
-                var $this = $(this);                
+                var $this = $(this);
                 if ($this.data('id')===parent) {
                     parent = $this.data('parent');
                     path[path.length] = $this.find('.node-name').html();
@@ -132,10 +146,17 @@
                 node.addClass('node' + data.id);
                 node.addClass('node-saved');
             }
+            node.data('name', data.name);
             node.data('parent', data.parent);
-            node.data('level', data.level);
+            var parent = this.getNode(data.parent);
+            node.data('level', (data.level !== undefined) ? data.level : parent.data('level')+1);
+            node.data('descr', (data.descr !== undefined) ? data.descr : null);
+            node.data('count_children', (data.count_children !== undefined && data.count_children !== null) ? data.count_children : null);
+            node.find('.node-badge').html( node.data('count_children') );
 
-            node.find('.node-indent').css('marginLeft', (parseInt(data.level) * self.options.nodeIndent) + 'px').html('&zwnj;');
+            margin = parseInt(node.data('level')) * self.options.nodeIndent;
+            node.find('.node-descr').css('marginLeft', (margin) + 'px').html( node.data('descr') );
+            node.find('.node-indent').css('marginLeft', margin + 'px').html('&zwnj;');
 
             node.mouseover(function() {
                 $(this).addClass('node-hovered');
@@ -156,14 +177,27 @@
                 }
             });
 
-            node.find('.node-icon').click(function(e) {
-                if (node.hasClass('node-collapsed'))
-                    self.expandNode(data.id, {
-                        isAltPressed: e.altKey
-                    });
-                else
-                    self.collapseNode(data.id);
+            node.find('.node-move').click(function() {
+                self.$tree.find('.node-selected').removeClass('node-selected');
+                var node = $(this).parents('.node');
+
+                if ($.isFunction(self.options.onSelect)) {
+                    self.options.onSelect(node, self);
+                }
             });
+
+            if(node.data('count_children')>0){
+                node.find('.node-icon').click(function(e) {
+                    if (node.hasClass('node-collapsed'))
+                        self.expandNode(data.id, {
+                            isAltPressed: e.altKey
+                        });
+                    else
+                        self.collapseNode(data.id);
+                });
+            } else {
+                node.find('.node-icon').css('visibility', 'hidden');
+            }
 
             $.each(this.actions, function(index,action) {
                 node.find('.node-action-'+index).click(function() {
@@ -177,6 +211,10 @@
 
             node.find('.node-saveCancel').click(function() {
                 self.saveCancelNode(node);
+            });
+
+            node.find('.node-moveSave').click(function() {
+                self.moveSaveNode(node);
             });
 
             return node;
@@ -204,11 +242,11 @@
                 'onAfterFill': function(self) {
                     self.appendNode(newNode);
                 }
-            });    
+            });
         },
         updateNode: function(node) {
             var nodeName = node.find('.node-name');
-            node.find('input').val(nodeName.html());
+            node.find('input').val(node.data('name'));
             nodeName.addClass('hide');
             node.find('.node-action').removeClass('hide');
         },
@@ -228,6 +266,19 @@
             }
 
         },
+        moveNode: function(node) {
+            node.find('.node-move')
+                .removeClass('hide')
+                .focus();
+        },
+        moveSaveNode: function(node) {
+            var self = this;
+            if ($.isFunction(self.options.onMove))
+                $.when(self.options.onMove(node)).done(function(data) {
+                    var nodeMove = node.find('.node-move');
+                    nodeMove.addClass('hide');
+                });
+        },
         _removeNode: function(id) {
             this.removeChildNodes(id);
             this.getNode(id).remove();
@@ -246,7 +297,7 @@
         },
         saveNode: function(node) {
             var self = this;
-            if ($.isFunction(self.options.onSave)) 
+            if ($.isFunction(self.options.onSave))
                 $.when(self.options.onSave(node)).done(function(data) {
                     delete self.cache[node.data('parent')];
                     var nodeAction = node.find('.node-action');
@@ -319,6 +370,9 @@
                     self.getNode(parentId).find('.node-name').addClass(self.options.loadingClass);
                 },
                 success: function(nodes) {
+                    if(!self.isArray(nodes)){
+                        throw new Error('Input data is not array!');
+                    }
                     for (x = 0; x < nodes.length; x++)
                         nodes[x].parent = parentId;
                     self.cache[parentId] = nodes;
@@ -330,13 +384,16 @@
                     self.getNode(parentId).find('.node-name').removeClass(self.options.loadingClass);
                 }
             });
+        },
+        isArray: function(inputArray) {
+            return inputArray && !(inputArray.propertyIsEnumerable('length')) && typeof inputArray === 'object' && typeof inputArray.length === 'number';
         }
     };
 
     $.fn.gtreetable = function(option) {
         return this.each(function() {
             var $this = $(this)
-                    , obj = $this.data('gtreetable');
+                , obj = $this.data('gtreetable');
 
             if (!obj) {
                 if ($this[0].tagName === 'TABLE') {
@@ -358,7 +415,9 @@
                 action: 'Action',
                 actionAdd: 'Add',
                 actionEdit: 'Edit',
-                actionDelete: 'Delete'
+                actionDelete: 'Delete',
+                parent_id: 'Parent ID',
+                actionMove: 'Move'
             }
         },
         defaultActions: [
@@ -379,8 +438,14 @@
                 event: function(node, object) {
                     object.removeNode(node);
                 }
-            }                    
-        ],        
+            } ,
+            {
+                name: '{actionMove}',
+                event: function(node, object) {
+                    object.moveNode(node);
+                }
+            }
+        ],
         loadingClass: 'node-loading',
         inputWidth: '60%',
         readonly: false,

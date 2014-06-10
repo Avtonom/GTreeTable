@@ -1,12 +1,16 @@
+/*
+ * GTreeTableEx
+ */
 .gtreetable .node-name { line-height:28px; cursor: pointer; }
+.gtreetable .node-descr { display: block; }
 .gtreetable .node-loading {  background:url(img/loading.gif) no-repeat; padding-left: 22px; }
 .gtreetable .node-icon { margin-right: 6px; opacity: 0.2; cursor: pointer; }
 .gtreetable .node-icon-selected { margin-right: 6px; display: none; }
-.gtreetable .node-expanded .node-icon  { 
-    transform:rotate(90deg); 
-    -webkit-transform:rotate(90deg); 
-    -moz-transform:rotate(90deg); 
-    -o-transform:rotate(90deg); 
+.gtreetable .node-expanded .node-icon  {
+    transform:rotate(90deg);
+    -webkit-transform:rotate(90deg);
+    -moz-transform:rotate(90deg);
+    -o-transform:rotate(90deg);
 }
 .gtreetable .node-hovered .node-icon { opacity: 0.6; }
 .gtreetable .node-actions { visibility: hidden; }
