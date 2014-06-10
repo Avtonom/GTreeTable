@@ -24,15 +24,21 @@
         this.options = $.extend({},$.fn.gtreetable.defaults, options);
 
         var lang = this.options.languages[this.options.language] === undefined ?
-            this.options.languages['en'] :
-            this.options.languages[this.options.language];
+                this.options.languages['en_US'] :
+                this.options.languages[this.options.language];
 
         if (this.options.template === undefined) {
-
+        
             var template = '<table class="table gtreetable">' +
                 '<tr class="node node-collapsed">' +
                 '<td>' +
-                '<span><span class="node-indent"></span>' +
+                    '<span>';
+                    
+            if (this.options.draggable===true) {
+                template += '<span class="node-handle">&zwnj;</span>';
+            }        
+                    
+            template +=  '<span><span class="node-indent"></span>' +
                 '<i class="node-icon glyphicon glyphicon-chevron-right"></i><i class="node-icon-selected glyphicon glyphicon-ok"></i>' +
                 '<span class="hide node-action">' +
                 '<input type="text" name="name" value="" style="width: '+ this.options.inputWidth +'" class="form-control" />' +
@@ -81,25 +87,24 @@
 
         this.cache = new Array();
 
-        this.$tree = element;
-        if (!this.$tree.find('tbody').length === 0)
-            this.$tree.append('<tbody></tbody>');
+        this.tree = element;
+        if (!this.tree.find('tbody').length === 0)
+            this.tree.append('<tbody></tbody>');
 
         if (!this.options.readonly) {
-            this.$tree.addClass('gtreetable-fullAccess');
+            this.tree.addClass('gtreetable-fullAccess');
         }
 
-        this.$nodeTemplate = $(this.options.templateSelector ? this.options.templateSelector : this.options.template).find('.node');
+        this.nodeTemplate = $(this.options.templateSelector ? this.options.templateSelector : this.options.template).find('.node');
     };
 
     GTreeTable.prototype = {
         init: function(id) {
             this.fillNodes(id === undefined ? 0 : id, this);
         },
-
         getNode: function(id) {
-            return this.$tree.find('.node' + id);
-        },
+            return this.tree.find('.node' + id);
+        },         
         getNodeLastChild: function(parentId) {
             var last = undefined;
             $.each(this.getNode(parentId).nextAll('.node'), function(key, node) {
@@ -113,20 +118,13 @@
             return last;
 
         },
-        getSelected: function() {
-            return this.$tree.find('.node-selected');
-        },
-        getSelectedId: function() {
-            var node = this.getSelected();
-            return node.data('id');
-        },
-        getSelectedPath: function() {
-            var node = this.getSelected();
-            if (!node)
-                return node;
-
+        getSelectedNodes: function() {
+            return this.tree.find('.node-selected');
+        },        
+        getNodePath: function(node) {
             var path = [node.find('.node-name').html()]
                 , parent = node.data('parent');
+                
             node.prevAll('.node').each(function() {
                 var $this = $(this);
                 if ($this.data('id')===parent) {
@@ -134,17 +132,18 @@
                     path[path.length] = $this.find('.node-name').html();
                 }
             });
-            return path;
-
-        },
+            return path;            
+        },  
         renderNode: function(data) {
             var self = this;
-            var node = self.$nodeTemplate.clone(false);
+            var node = self.nodeTemplate.clone(false);
             node.find('.node-name').html(data.name);
             if (data.id !== undefined) {
                 node.data('id', data.id);
                 node.addClass('node' + data.id);
                 node.addClass('node-saved');
+                if (parseInt(data.level)>=1)
+                    node.addClass('node-draggable');
             }
             node.data('name', data.name);
             node.data('parent', data.parent);
@@ -154,6 +153,7 @@
             node.data('count_children', (data.count_children !== undefined && data.count_children !== null) ? data.count_children : null);
             node.find('.node-badge').html( node.data('count_children') );
 
+            node.find('.node-indent').css('marginLeft', (parseInt(data.level) * self.options.nodeIndent) + 'px');
             margin = parseInt(node.data('level')) * self.options.nodeIndent;
             node.find('.node-descr').css('marginLeft', (margin) + 'px').html( node.data('descr') );
             node.find('.node-indent').css('marginLeft', margin + 'px').html('&zwnj;');
@@ -168,12 +168,34 @@
             });
 
             node.find('.node-name').click(function() {
-                self.$tree.find('.node-selected').removeClass('node-selected');
                 var node = $(this).parents('.node');
-                node.addClass('node-selected');
+                var nodeData = {
+                    id: node.data('id'),
+                    path: self.getNodePath(node)
+                };
+                if(node.hasClass('node-selected')) {
+                    if ($.isFunction(self.options.onUnselect)) {
+                        self.options.onUnselect(node, nodeData, self);
+                    }
+                    node.removeClass('node-selected');
+                } else {
+                    var selectedNodes = self.getSelectedNodes();
+                    if (self.options.multiselect===false) {
+                        selectedNodes.removeClass('node-selected');
+                    } else {
+                        if (!isNaN(self.options.multiselect) && self.options.multiselect === self.getSelectedNodes().length) {
+                            if ($.isFunction(self.options.onSelectOverflow)) {
+                                self.options.onSelectOverflow(node, nodeData, self);
+                            }                            
+                            return;
+                        }
+                    }
+                    
+                    node.addClass('node-selected');
 
-                if ($.isFunction(self.options.onSelect)) {
-                    self.options.onSelect(node, self);
+                    if ($.isFunction(self.options.onSelect)) {
+                        self.options.onSelect(node, nodeData, self);
+                    }                    
                 }
             });
 
@@ -220,8 +242,8 @@
             return node;
         },
         appendNode: function(node) {
-            if (this.$tree.find('.node').length === 0)
-                this.$tree.append(node);
+            if (this.tree.find('.node').length === 0)
+                this.tree.append(node);
             else {
                 var last = this.getNodeLastChild(node.data('parent'));
                 if (last === undefined)
@@ -307,6 +329,7 @@
                         node.data('id', data.id);
                         node.addClass('node' + data.id);
                         node.addClass('node-saved');
+                        node.addClass('node-draggable');
                     }
                 });
         },
@@ -391,9 +414,19 @@
     };
 
     $.fn.gtreetable = function(option) {
+        if(typeof option === "string" && option==="selectedId") {
+            var ids = [],
+                obj = $(this).data('gtreetable');
+        
+            $.each(obj.getSelectedNodes(),function(key, node) {
+                ids.push($(node).data('id'));
+            });
+            return (obj.options.multiselect===false) ? ids[0] : ids;
+        }        
+
         return this.each(function() {
             var $this = $(this)
-                , obj = $this.data('gtreetable');
+                    , obj = $this.data('gtreetable');
 
             if (!obj) {
                 if ($this[0].tagName === 'TABLE') {
@@ -401,15 +434,15 @@
                     $this.data('gtreetable', obj);
                     obj.init();
                 }
-            }
+            }                
         });
     };
 
     $.fn.gtreetable.defaults = {
         nodeIndent: 16,
-        language: 'en',
+        language: 'en_US',
         languages: {
-            en: {
+            en_US: {
                 save: 'Save',
                 cancel: 'Cancel',
                 action: 'Action',
@@ -449,6 +482,7 @@
         loadingClass: 'node-loading',
         inputWidth: '60%',
         readonly: false,
-        cache: true
+        cache: true,
+        draggable: false
     };
 }(jQuery);

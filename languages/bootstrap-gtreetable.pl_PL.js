@@ -1,5 +1,5 @@
 /* =========================================================
- * bootstrap-gtreetable.pl.js
+ * bootstrap-gtreetable.pl_PL.js
  * http://gtreetable.gilek.net
  * =========================================================
  * Copyright 2014 Maciej "Gilek" Kłak
@@ -18,7 +18,7 @@
  * ========================================================= */
 
 (function( $ ) {
-    $.fn.gtreetable.defaults.languages.pl = {
+    $.fn.gtreetable.defaults.languages.pl_PL = {
         save: 'Zapisz',
         cancel: 'Anuluj',
         action: 'Akcja',
