@@ -12,7 +12,7 @@ See OLD [live demo](http://gtreetable.gilek.net).
 
 You can also see [Yii-GTreeTable](http://www.yiiframework.com/extension/gtreetable/), PHP back-end for Yii Framework.
 
-![](https://github.com/Avtonom/GTreeTable/img/demo.png)
+![](https://github.com/Avtonom/GTreeTable/blob/master/img/demo.png)
 
 Installation
 --------------------------
